@@ -6,6 +6,7 @@ import aiosmtplib
 from pydantic import ValidationError
 from app.config import get_settings
 from app.schemas.contact import ContactRequest
+from app.services.ai import ContactCategory
 
 
 logger = logging.getLogger("app.requests.email")
@@ -15,7 +16,20 @@ class EmailDeliveryError(Exception):
     pass
 
 
-async def send_contact_emails(contact: ContactRequest) -> None:
+CATEGORY_LABELS = {
+    ContactCategory.PROJECT: "Новый проект",
+    ContactCategory.JOB_OFFER: "Предложение работы",
+    ContactCategory.COOPERATION: "Сотрудничество",
+    ContactCategory.QUESTION: "Вопрос",
+    ContactCategory.OTHER: "Другое",
+    ContactCategory.UNKNOWN: "Не определено",
+}
+
+
+async def send_contact_emails(
+    contact: ContactRequest,
+    category: ContactCategory,
+) -> None:
     try:
         settings = get_settings()
     except ValidationError as error:
@@ -66,6 +80,7 @@ async def send_contact_emails(contact: ContactRequest) -> None:
     owner_message["Reply-To"] = contact.email
     owner_message.set_content(
         "Получено новое обращение через форму на сайте.\n\n"
+        f"Тип обращения: {CATEGORY_LABELS[category]}\n\n"
         f"{contact_details}\n\n"
         "Чтобы ответить пользователю, ответьте на это письмо."
     )

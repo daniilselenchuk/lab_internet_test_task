@@ -4,6 +4,7 @@ from uuid import uuid4
 from fastapi import APIRouter, HTTPException
 
 from app.schemas.contact import ContactRequest, ContactResponse
+from app.services.ai import classify_contact
 from app.services.email import EmailDeliveryError, send_contact_emails
 
 router = APIRouter(prefix="/api", tags=["contact"])
@@ -15,8 +16,10 @@ router = APIRouter(prefix="/api", tags=["contact"])
     status_code=HTTPStatus.ACCEPTED,
 )
 async def create_contact_request(payload: ContactRequest) -> ContactResponse:
+    category = await classify_contact(payload.comment)
+
     try:
-        await send_contact_emails(payload)
+        await send_contact_emails(payload, category)
     except EmailDeliveryError as error:
         raise HTTPException(
             status_code=HTTPStatus.SERVICE_UNAVAILABLE,

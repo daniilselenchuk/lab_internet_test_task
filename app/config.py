@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     contact_owner_email: EmailStr | None = None
     smtp_use_tls: bool = True
     smtp_timeout: float = Field(default=10, gt=0)
+    gigachat_credentials: SecretStr | None = None
+    gigachat_model: str = "GigaChat-2"
+    gigachat_verify_ssl_certs: bool = True
 
 
 @lru_cache
