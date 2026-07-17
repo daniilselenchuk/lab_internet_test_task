@@ -22,6 +22,8 @@ class Settings(BaseSettings):
     gigachat_credentials: SecretStr | None = None
     gigachat_model: str = "GigaChat-2"
     gigachat_verify_ssl_certs: bool = True
+    rate_limit_max_requests: int = Field(default=5, gt=0)
+    rate_limit_window_seconds: int = Field(default=60, gt=0)
 
 
 @lru_cache
