@@ -24,6 +24,7 @@ class Settings(BaseSettings):
     gigachat_verify_ssl_certs: bool = True
     rate_limit_max_requests: int = Field(default=5, gt=0)
     rate_limit_window_seconds: int = Field(default=60, gt=0)
+    cors_origins: str = "http://localhost:3000,http://localhost:5173"
 
 
 @lru_cache
