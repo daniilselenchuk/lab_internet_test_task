@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.contact import router as contact_router
 from app.config import get_settings
+from app.error_handlers import handle_unexpected_error
 from app.middleware.rate_limit import rate_limit_contact_requests
 from app.middleware.request_logging import log_requests, setup_logging
 
@@ -17,8 +18,10 @@ def create_app() -> FastAPI:
     ]
     application = FastAPI(
         title="Lab internet API",
-        version="0.2.0",
+        description="Принимает обращения с сайта и отправляет email-уведомления.",
+        version="0.4.0",
     )
+    application.state.cors_origins = cors_origins
     application.add_middleware(
         CORSMiddleware,
         allow_origins=cors_origins,
@@ -27,6 +30,7 @@ def create_app() -> FastAPI:
     )
     application.middleware("http")(rate_limit_contact_requests)
     application.middleware("http")(log_requests)
+    application.add_exception_handler(Exception, handle_unexpected_error)
     application.include_router(contact_router)
     return application
 

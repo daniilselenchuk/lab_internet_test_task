@@ -5,10 +5,40 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 class ContactRequest(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    name: Annotated[str, Field(min_length=1, max_length=100)]
-    phone: Annotated[str, Field(min_length=1, max_length=30)]
-    email: EmailStr
-    comment: Annotated[str, Field(min_length=1, max_length=2000)]
+    name: Annotated[
+        str,
+        Field(
+            min_length=1,
+            max_length=100,
+            description="Имя отправителя.",
+            examples=["Даниил"],
+        ),
+    ]
+    phone: Annotated[
+        str,
+        Field(
+            min_length=1,
+            max_length=30,
+            description="Телефон отправителя.",
+            examples=["+7 999 123-45-67"],
+        ),
+    ]
+    email: Annotated[
+        EmailStr,
+        Field(
+            description="Email для отправки копии обращения.",
+            examples=["user@example.com"],
+        ),
+    ]
+    comment: Annotated[
+        str,
+        Field(
+            min_length=1,
+            max_length=2000,
+            description="Текст обращения.",
+            examples=["Хочу обсудить разработку интернет-магазина."],
+        ),
+    ]
 
     @classmethod
     @field_validator("phone")
@@ -24,6 +54,15 @@ class ContactRequest(BaseModel):
 
 
 class ContactResponse(BaseModel):
-    request_id: str
-    status: str
-    message: str
+    request_id: Annotated[
+        str,
+        Field(description="Идентификатор обращения."),
+    ]
+    status: Annotated[
+        str,
+        Field(description="Статус обработки обращения."),
+    ]
+    message: Annotated[
+        str,
+        Field(description="Результат обработки обращения."),
+    ]

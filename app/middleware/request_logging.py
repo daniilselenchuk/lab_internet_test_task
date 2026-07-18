@@ -31,6 +31,7 @@ def setup_logging() -> None:
 
 async def log_requests(request: Request, call_next):
     request_id = str(uuid4())
+    request.state.request_id = request_id
     started_at = perf_counter()
     client_ip = request.client.host if request.client else "unknown"
 
