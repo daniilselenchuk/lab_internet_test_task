@@ -19,16 +19,18 @@ router = APIRouter(prefix="/api", tags=["Обратная связь"])
         "Валидирует данные, классифицирует обращение с помощью AI "
         "и отправляет уведомления владельцу сайта и пользователю."
     ),
-    response_description="Contact request accepted and email notifications sent.",
+    response_description=(
+        "Обращение принято, уведомления по электронной почте отправлены."
+    ),
     responses={
         HTTPStatus.TOO_MANY_REQUESTS: {
-            "description": "Too many requests.",
+            "description": "Превышен лимит запросов.",
         },
         HTTPStatus.SERVICE_UNAVAILABLE: {
-            "description": "Email service is temporarily unavailable.",
+            "description": "Сервис отправки электронной почты временно недоступен.",
         },
         HTTPStatus.INTERNAL_SERVER_ERROR: {
-            "description": "Internal server error.",
+            "description": "Внутренняя ошибка сервера.",
             "content": {
                 "application/json": {
                     "example": {
@@ -36,6 +38,13 @@ router = APIRouter(prefix="/api", tags=["Обратная связь"])
                         "request_id": "7f8f04de-6166-4e3f-a340-2f43d69bfb7c",
                     }
                 }
+            },
+        },
+    },
+    openapi_extra={
+        "responses": {
+            "422": {
+                "description": "Ошибка валидации входных данных.",
             },
         },
     },

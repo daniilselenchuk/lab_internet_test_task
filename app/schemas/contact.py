@@ -26,7 +26,7 @@ class ContactRequest(BaseModel):
     email: Annotated[
         EmailStr,
         Field(
-            description="Email для отправки копии обращения.",
+            description="Адрес электронной почты для отправки копии обращения.",
             examples=["user@example.com"],
         ),
     ]

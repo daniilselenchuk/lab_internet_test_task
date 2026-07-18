@@ -1,10 +1,12 @@
 import logging
 from email.message import EmailMessage
+from typing import Literal
 
 import aiosmtplib
 
 from pydantic import ValidationError
-from app.config import get_settings
+
+from app.config import Settings, get_settings
 from app.schemas.contact import ContactRequest
 from app.services.ai import ContactCategory
 
@@ -26,10 +28,7 @@ CATEGORY_LABELS = {
 }
 
 
-async def send_contact_emails(
-    contact: ContactRequest,
-    category: ContactCategory,
-) -> None:
+def _get_email_configuration() -> tuple[Settings, str | None]:
     try:
         settings = get_settings()
     except ValidationError as error:
@@ -64,6 +63,47 @@ async def send_contact_emails(
         )
         raise EmailDeliveryError("Email service is not configured.")
 
+    return settings, password
+
+
+def _create_smtp_client(
+    settings: Settings,
+    password: str | None,
+) -> aiosmtplib.SMTP:
+    return aiosmtplib.SMTP(
+        hostname=settings.smtp_host,
+        port=settings.smtp_port,
+        username=settings.smtp_username,
+        password=password,
+        start_tls=settings.smtp_use_tls,
+        timeout=settings.smtp_timeout,
+    )
+
+
+async def check_smtp_connection() -> Literal["up", "down", "not_configured"]:
+    try:
+        settings, password = _get_email_configuration()
+    except EmailDeliveryError:
+        return "not_configured"
+
+    try:
+        async with _create_smtp_client(settings, password):
+            pass
+    except (OSError, aiosmtplib.SMTPException) as error:
+        logger.warning(
+            "smtp_health_check_failed error_type=%s",
+            type(error).__name__,
+        )
+        return "down"
+
+    return "up"
+
+
+async def send_contact_emails(
+    contact: ContactRequest,
+    category: ContactCategory,
+) -> None:
+    settings, password = _get_email_configuration()
     sender = str(settings.smtp_from_email)
     owner = str(settings.contact_owner_email)
     contact_details = (
@@ -106,14 +146,7 @@ async def send_contact_emails(
     )
 
     try:
-        smtp_client = aiosmtplib.SMTP(
-            hostname=settings.smtp_host,
-            port=settings.smtp_port,
-            username=settings.smtp_username,
-            password=password,
-            start_tls=settings.smtp_use_tls,
-            timeout=settings.smtp_timeout,
-        )
+        smtp_client = _create_smtp_client(settings, password)
         async with smtp_client:
             logger.info("email_smtp_connected")
             stage = "owner_message"
